@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 @RequestMapping("/api/user")
 public class UserController {
 
-	private Logger log = LoggerFactory.getLogger(UserController.class);
+	private static final Logger log = LoggerFactory.getLogger(UserController.class);
 	
 	@Autowired
 	private UserRepository userRepository;
@@ -51,19 +51,21 @@ public class UserController {
 	public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest) {
 		User user = new User();
 		user.setUsername(createUserRequest.getUsername());
+		log.info("New user request: {}", createUserRequest.getUsername());
 		Cart cart = new Cart();
 		cartRepository.save(cart);
 		user.setCart(cart);
 
 		if (createUserRequest.getPassword().length() < 8 ||
 				!createUserRequest.getPassword().equals(createUserRequest.getConfirmPassword())) {
-			log.error("Please check the password and try again. User {} could not be created.", createUserRequest.getUsername());
+			log.error("Password doesn't match requirements. User {} could not be created.", createUserRequest.getUsername());
 			return ResponseEntity.badRequest().build();
 		}
 
 		user.setPassword(bCryptPasswordEncoder.encode(createUserRequest.getPassword()));
 
 		userRepository.save(user);
+		log.info("User has been created successfully: {}", createUserRequest.getUsername());
 		return ResponseEntity.ok(user);
 	}
 	
